@@ -33,5 +33,6 @@ You can design your own maps using the graphical level creator tool:
 python level_creator.py my_map.txt
 ```
 
-Left click to place tiles. Use the numeric keys to select a tile type and
-press `S` to save.
+Left click places the selected tile while right click erases. Use the mouse
+wheel or number keys (1-3) to change the current tile type. When you are happy
+with the layout, press `S` to save your map.
