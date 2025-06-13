@@ -24,3 +24,14 @@ python main.py
 ```
 
 This will launch the PixelPioneers window.
+
+## Level Creator
+
+You can design your own maps using the graphical level creator tool:
+
+```bash
+python level_creator.py my_map.txt
+```
+
+Left click to place tiles. Use the numeric keys to select a tile type and
+press `S` to save.
