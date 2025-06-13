@@ -4,6 +4,17 @@ import pygame
 
 SKILLS = ["dig", "build", "block"]
 
+
+def _draw_gradient_rect(surface, rect, color1, color2):
+    """Draw a simple vertical gradient"""
+    x, y, w, h = rect
+    for i in range(h):
+        ratio = i / h
+        r = color1[0] + (color2[0] - color1[0]) * ratio
+        g = color1[1] + (color2[1] - color1[1]) * ratio
+        b = color1[2] + (color2[2] - color1[2]) * ratio
+        pygame.draw.line(surface, (int(r), int(g), int(b)), (x, y + i), (x + w, y + i))
+
 class SkillToolbar:
     """
     A simple toolbar at the top of the screen with three colored squares:
@@ -16,7 +27,12 @@ class SkillToolbar:
     def __init__(self):
         self.icon_size = 32
         self.icon_padding = 10
+        self.bar_height = self.icon_size + 2 * self.icon_padding
         self.selected_skill = None
+
+        # Font for HUD information
+        pygame.font.init()
+        self.font = pygame.font.SysFont(None, 20)
 
         # Precompute rectangles for each skill
         self.icon_rects = []
@@ -39,18 +55,35 @@ class SkillToolbar:
                         self.selected_skill = skill
                     return  # only one can be toggled per click
 
-    def draw(self, surface):
-        # Draw background bar
-        bar_rect = pygame.Rect(0, 0, surface.get_width(), self.icon_size + 2*self.icon_padding)
-        pygame.draw.rect(surface, (30, 30, 30), bar_rect)
+    def draw(self, surface, level=None):
+        # Draw background bar with a subtle gradient
+        bar_rect = pygame.Rect(0, 0, surface.get_width(), self.bar_height)
+        _draw_gradient_rect(surface, bar_rect, (40, 40, 40), (25, 25, 25))
 
-        # Draw each skill as a filled square
+        # Draw each skill as a colored circle
         for idx, rect in enumerate(self.icon_rects):
-            color = (200, 50, 50) if SKILLS[idx] == "dig" else \
-                    (50, 50, 200) if SKILLS[idx] == "build" else \
-                    (200, 200, 50)
-            pygame.draw.rect(surface, color, rect)
+            color = (
+                (220, 70, 70) if SKILLS[idx] == "dig" else
+                (70, 70, 220) if SKILLS[idx] == "build" else
+                (220, 220, 70)
+            )
+            center = rect.center
+            radius = rect.width // 2 - 2
+            pygame.draw.circle(surface, color, center, radius)
 
-            # If selected, draw a yellow border
+            # If selected, draw a white border around the circle
             if SKILLS[idx] == self.selected_skill:
-                pygame.draw.rect(surface, (255, 255, 0), rect.inflate(4, 4), 2)
+                pygame.draw.circle(surface, (255, 255, 255), center, radius + 2, 2)
+
+        # Draw HUD info on the right
+        if level is not None:
+            info = (
+                f"Exits: {level.exit_count}/{level.target_exits} | "
+                f"Score: {int(level.get_score())} | "
+                f"Time: {int(level.get_elapsed_time())}s"
+            )
+            text_surf = self.font.render(info, True, (240, 240, 240))
+            text_rect = text_surf.get_rect()
+            text_rect.top = self.icon_padding
+            text_rect.right = surface.get_width() - self.icon_padding
+            surface.blit(text_surf, text_rect)

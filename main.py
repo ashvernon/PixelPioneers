@@ -41,7 +41,7 @@ def main():
         # Draw everything
         screen.fill((0, 0, 0))
         level.draw(screen)
-        toolbar.draw(screen)
+        toolbar.draw(screen, level)
 
         pygame.display.flip()
         clock.tick(FPS)
