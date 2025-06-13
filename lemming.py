@@ -8,6 +8,10 @@ WALK_SPEED = 1.0
 GRAVITY = 0.2
 MAX_FALL_SPEED = 4.0
 
+# Umbrella constants (slower descent)
+UMBRELLA_GRAVITY = 0.05
+UMBRELLA_MAX_FALL_SPEED = 1.5
+
 class Lemming(pygame.sprite.Sprite):
     """
     A single lemming, drawn as a green rectangle ~ (TILE_SIZE/2 × TILE_SIZE/2).
@@ -17,6 +21,8 @@ class Lemming(pygame.sprite.Sprite):
       - "digging": removes one tile below, then falls
       - "building": adds one tile in front/above, then walks
       - "blocking": stands in place
+    Skills:
+      - "umbrella": slows falling speed while active
     """
 
     def __init__(self, spawn_pos):
@@ -37,6 +43,7 @@ class Lemming(pygame.sprite.Sprite):
         # Initial state
         self.state = "walking"
         self.skill_assigned = None
+        self.has_umbrella = False
 
         # Placeholder for sounds
         # self.dig_sound = None  # TODO: load dig.wav here
@@ -66,6 +73,9 @@ class Lemming(pygame.sprite.Sprite):
             self.state = "blocking"
             self.vx = 0
             self.vy = 0
+            self.skill_assigned = None
+        elif self.skill_assigned == "umbrella" and self.state in ("walking", "falling"):
+            self.has_umbrella = True
             self.skill_assigned = None
 
         # State behavior
@@ -121,8 +131,14 @@ class Lemming(pygame.sprite.Sprite):
         self.rect.x = next_x
 
     def _fall(self, tilemap):
-        # Apply gravity
-        self.vy = min(self.vy + GRAVITY, MAX_FALL_SPEED)
+        # Apply gravity (slower when umbrella is active)
+        if self.has_umbrella:
+            g = UMBRELLA_GRAVITY
+            max_speed = UMBRELLA_MAX_FALL_SPEED
+        else:
+            g = GRAVITY
+            max_speed = MAX_FALL_SPEED
+        self.vy = min(self.vy + g, max_speed)
         self.rect.y += self.vy
 
         # Check if landed
@@ -165,3 +181,10 @@ class Lemming(pygame.sprite.Sprite):
         screen_x = self.rect.x - camera.x
         screen_y = self.rect.y - camera.y
         surface.blit(self.image, (screen_x, screen_y))
+
+        # Draw a simple umbrella if active and falling
+        if self.has_umbrella and self.state == "falling":
+            top = (screen_x + self.rect.width // 2, screen_y - 4)
+            left = (screen_x, screen_y)
+            right = (screen_x + self.rect.width, screen_y)
+            pygame.draw.polygon(surface, (200, 200, 200), [left, right, top])

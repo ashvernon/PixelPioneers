@@ -2,7 +2,7 @@
 
 import pygame
 
-SKILLS = ["dig", "build", "block"]
+SKILLS = ["dig", "build", "block", "umbrella"]
 
 
 def _draw_gradient_rect(surface, rect, color1, color2):
@@ -61,12 +61,14 @@ class SkillToolbar:
         _draw_gradient_rect(surface, bar_rect, (40, 40, 40), (25, 25, 25))
 
         # Draw each skill as a colored circle
+        color_map = {
+            "dig": (220, 70, 70),
+            "build": (70, 70, 220),
+            "block": (220, 220, 70),
+            "umbrella": (150, 150, 220),
+        }
         for idx, rect in enumerate(self.icon_rects):
-            color = (
-                (220, 70, 70) if SKILLS[idx] == "dig" else
-                (70, 70, 220) if SKILLS[idx] == "build" else
-                (220, 220, 70)
-            )
+            color = color_map.get(SKILLS[idx], (200, 200, 200))
             center = rect.center
             radius = rect.width // 2 - 2
             pygame.draw.circle(surface, color, center, radius)
