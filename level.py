@@ -5,7 +5,7 @@ from tilemap import TileMap, TILE_SIZE
 from lemming import Lemming
 
 class Level:
-    def __init__(self, map_file, screen_width, screen_height):
+    def __init__(self, map_file, screen_width, screen_height, target_exits=10):
         # Load the tilemap
         self.tilemap = TileMap(map_file)
 
@@ -21,6 +21,13 @@ class Level:
         # Timer to control spawning
         self.spawn_timer = pygame.time.get_ticks()
         self.spawn_interval = 2000  # spawn every 2000 ms
+
+        # Scoring / progression
+        self.target_exits = target_exits
+        self.exit_count = 0
+        self.score = 0
+        self.start_time = pygame.time.get_ticks()
+        self.end_time = None
 
         self.completed = False
         self.failed = False
@@ -60,6 +67,12 @@ class Level:
             cx, cy = lemming.rect.center
             if self.tilemap.is_exit_at_pixel(cx, cy):
                 lemming.kill()
+                self.exit_count += 1
+                if (not self.completed and
+                        self.exit_count >= self.target_exits):
+                    self.completed = True
+                    self.end_time = now
+                    self._calculate_score()
                 continue
 
             # If they fall off the bottom of the map, remove them
@@ -88,6 +101,29 @@ class Level:
         py = self.spawn_point[1] * TILE_SIZE
         lemming = Lemming((px, py))
         self.lemmings.add(lemming)
+
+    def _calculate_score(self):
+        """
+        Compute the final score based on exits and completion time.
+        """
+        if self.end_time is None:
+            return
+        elapsed = (self.end_time - self.start_time) / 1000.0
+        time_bonus = max(0, int(100 - elapsed))
+        self.score = self.exit_count * 100 + time_bonus
+
+    def get_elapsed_time(self):
+        end = self.end_time if self.end_time is not None else pygame.time.get_ticks()
+        return (end - self.start_time) / 1000.0
+
+    def get_score(self):
+        """Return the current score (final if level completed)."""
+        if self.completed and self.end_time is not None:
+            return self.score
+        # interim score during play
+        elapsed = self.get_elapsed_time()
+        time_bonus = max(0, int(100 - elapsed))
+        return self.exit_count * 100 + time_bonus
 
     def draw(self, surface):
         """
