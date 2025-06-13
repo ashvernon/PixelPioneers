@@ -19,7 +19,7 @@ def main():
     # Create toolbar and level
     toolbar = SkillToolbar()
     # Assume you have a map text file called 'level1_map.txt' in the same folder
-    level = Level("level1_map.txt", SCREEN_WIDTH, SCREEN_HEIGHT)
+    level = Level("level1_map.txt", SCREEN_WIDTH, SCREEN_HEIGHT, target_exits=5)
 
     running = True
     while running:
@@ -34,6 +34,9 @@ def main():
 
         # Update game logic
         level.update()
+        pygame.display.set_caption(
+            f"PixelPioneers - Exits: {level.exit_count}/{level.target_exits} "
+            f"Score: {int(level.get_score())}")
 
         # Draw everything
         screen.fill((0, 0, 0))
