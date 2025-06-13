@@ -14,6 +14,9 @@ COLORS = {
     '.': (0, 0, 0)
 }
 
+# Order in which tiles are cycled/selected
+TILE_TYPES = ['#', 'E', '.']
+
 FONT_COLOR = (255, 255, 255)
 BACKGROUND = (0, 0, 0)
 
@@ -30,7 +33,8 @@ class LevelCreator:
             self.cols = cols
             self.rows = rows
             self.map_data = [['.' for _ in range(self.cols)] for _ in range(self.rows)]
-        self.selected = '#'
+        self.selected_index = 0
+        self.selected = TILE_TYPES[self.selected_index]
         w = self.cols * TILE_SIZE
         h = self.rows * TILE_SIZE + 40  # space for instructions
         self.screen = pygame.display.set_mode((w, h))
@@ -53,29 +57,38 @@ class LevelCreator:
                     if event.key == pygame.K_ESCAPE:
                         running = False
                     elif event.key == pygame.K_1:
-                        self.selected = '#'
+                        self.selected_index = 0
                     elif event.key == pygame.K_2:
-                        self.selected = 'E'
+                        self.selected_index = 1
                     elif event.key == pygame.K_3:
-                        self.selected = '.'
+                        self.selected_index = 2
                     elif event.key == pygame.K_s:
                         if self.map_file:
                             self._save_map(self.map_file)
                             print(f"Saved to {self.map_file}")
+                    self.selected = TILE_TYPES[self.selected_index]
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
-                        self._place_tile(event.pos)
+                        self._place_tile(event.pos, TILE_TYPES[self.selected_index])
+                    elif event.button == 3:
+                        self._place_tile(event.pos, '.')
+                    elif event.button == 4:  # scroll up
+                        self.selected_index = (self.selected_index - 1) % len(TILE_TYPES)
+                        self.selected = TILE_TYPES[self.selected_index]
+                    elif event.button == 5:  # scroll down
+                        self.selected_index = (self.selected_index + 1) % len(TILE_TYPES)
+                        self.selected = TILE_TYPES[self.selected_index]
             self._draw()
             pygame.display.flip()
             clock.tick(60)
         pygame.quit()
 
-    def _place_tile(self, pos):
+    def _place_tile(self, pos, tile_char):
         x, y = pos
         col = x // TILE_SIZE
         row = y // TILE_SIZE
         if row < self.rows and col < self.cols:
-            self.map_data[row][col] = self.selected
+            self.map_data[row][col] = tile_char
 
     def _draw(self):
         self.screen.fill(BACKGROUND)
@@ -85,10 +98,23 @@ class LevelCreator:
                 rect = pygame.Rect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE)
                 pygame.draw.rect(self.screen, color, rect)
                 pygame.draw.rect(self.screen, (40, 40, 40), rect, 1)
+
+        # Highlight the tile under the mouse with the selected color
+        mx, my = pygame.mouse.get_pos()
+        col = mx // TILE_SIZE
+        row = my // TILE_SIZE
+        if row < self.rows and col < self.cols:
+            preview_rect = pygame.Rect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+            highlight_color = COLORS.get(self.selected, (255, 255, 255))
+            pygame.draw.rect(self.screen, highlight_color, preview_rect, 2)
+
         self._draw_instructions()
 
     def _draw_instructions(self):
-        text = f"Selected: {self.selected}  [1] Ground  [2] Exit  [3] Empty  [S] Save  [Esc] Quit"
+        text = (
+            f"Selected: {self.selected}  [1] Ground  [2] Exit  [3] Empty  "
+            "Left Click: place  Right Click: erase  Wheel: cycle  [S] Save  [Esc] Quit"
+        )
         img = self.font.render(text, True, FONT_COLOR)
         rect = img.get_rect()
         rect.topleft = (5, self.rows * TILE_SIZE + 5)
