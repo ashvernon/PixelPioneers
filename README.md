@@ -25,6 +25,16 @@ python main.py
 
 This will launch the PixelPioneers window.
 
+## Lemming Skills
+
+During the game you can assign skills to individual lemmings using the toolbar
+at the top of the window:
+
+- **dig** – dig the tile below.
+- **build** – place a tile in front of the lemming.
+- **block** – stand still and block others.
+- **umbrella** – slow down falling speed.
+
 ## Level Creator
 
 You can design your own maps using the graphical level creator tool:
